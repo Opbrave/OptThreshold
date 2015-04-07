@@ -75,16 +75,78 @@ filepath=os.path.join(Base_Path,"result.txt")
 S_LinesDict=opt.GenSLinesDict(filepath)
 filepath=os.path.join(Base_Path,"tone.B.txt")
 T_LinesDict=opt.GenTLinesDict(filepath)
-StaticDict=opt.GenStaticData(S_LinesDict,T_LinesDict)
-#print(StaticDict)
+Ensemble=opt.GenStaticData(S_LinesDict,T_LinesDict)
+StaticDict=Ensemble[0]
+LocationData=Ensemble[1]
+#print(LocationData)
+sum_word=opt.SumOfWord(StaticDict)
+mean_result=opt.FindMeanVar(StaticDict)
+#R=opt.GenPlot(StaticDict)
+InitClassifyDict=opt.InitClassify(mean_result,StaticDict)
+inithre=[]
+inithre.append(mean_result[4])
+inithre.append(mean_result[0])
+ResultCla=opt.ResultOfCla(sum_word,inithre,InitClassifyDict)
+curcount=0
+left=inithre[0]
+right=inithre[1]
+thre_left=0.0
+thre_right=0.0
+OptStaticDate={}
+tmp_rate=ResultCla["rate"]
+thre=[]
+while curcount<50:
+    thre.append(left)
+    thre.append(right)
+    StaticDate=opt.JudeThre(thre,InitClassifyDict)
+    FindCla=opt.ResultOfCla(sum_word,thre,StaticDate)
+    left-=left/50
+    if tmp_rate<FindCla["rate"]:
+        tmp_rate=FindCla["rate"]
+        thre_left=left
+        OptStaticDate=StaticDate
+    #print(FindCla)
+    curcount+=1
+    thre=[]
 
-dataresult=opt.FindMean(StaticDict)
-#print(dataresult)
-initrate=opt.InitThreshold(dataresult,StaticDict)
-threshold=opt.Recur(StaticDict,dataresult[4],dataresult[0])
-print(threshold)
-#print(initrate)
-#print(T_LinesDict)
+
+curcount=0
+thre=[]
+while curcount<50:
+    left=thre_left
+    thre.append(left)
+    thre.append(right)
+    StaticDate=opt.JudeThre(thre,OptStaticDate)
+    FindCla=opt.ResultOfCla(sum_word,thre,StaticDate)
+    right-=right/50
+    if tmp_rate<FindCla["rate"]:
+        tmp_rate=FindCla["rate"]
+        thre_right=right
+        OptStaticDate=StaticDate
+    curcount+=1
+    thre=[]
+
+OptThreshold=[]
+OptThreshold.append(thre_left)
+OptThreshold.append(thre_right)
+T_d=opt.Location(OptThreshold,LocationData)
+
+
+filepath=os.path.join(Base_Path,"wrongdata.txt")
+fout=open(filepath,'w')
+for key in T_d:
+    linecon=T_d[key]
+    fout.write(str(key))
+    fout.write(":")
+    for index in range(len(linecon)):
+        if abs(linecon[index][2]-linecon[index][3])==2:
+            fout.write(str(linecon[index]))
+            fout.write(" ")
+    fout.write("\n")
+fout.close()
+
+
+
 '''
 if 0:    
     Cplines={}
