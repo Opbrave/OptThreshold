@@ -86,11 +86,9 @@ def GenStaticData(S_LinesDict,T_LinesDict):
             m_list_T=T_LinesDict[key_0]
             num_S_list=len(m_list_S)
             num_T_list=len(m_list_T)
-            #print(num_S_list,num_T_list)
             index_T=0
             index_S=0
             index_list=0
-            #print(key_0)
             list_tmp=[]
             same_count=0
             error_S=0
@@ -109,30 +107,53 @@ def GenStaticData(S_LinesDict,T_LinesDict):
                     index_S=index_S-error_S
                     index_T+=1
                     error_S=0
-                    #f(same_index_S==index_S):
-                        #same_count+=1
-                #if same_count==3:
-                    #index_S+=1
-                    #same_count=0
             Static_Data[key_0]=list_tmp
             list_tmp=[]
-    return Static_Data
+    #print(Static_Data)
+    lablist_1=[]
+    lablist_2=[]
+    lablist_3=[]
+    for key in Static_Data:
+        linecon=Static_Data[key]
+        for index in range(len(linecon)):
+            if linecon[index][2]==1:
+                lablist_1.append(linecon[index])
+            elif linecon[index][2]==2:
+                lablist_2.append(linecon[index])
+            else:
+                lablist_3.append(linecon[index])
+    StaticData={}
+    StaticData["1"]=lablist_1
+    StaticData["2"]=lablist_2
+    StaticData["3"]=lablist_3
+    Ensemble=[]
+    Ensemble.append(StaticData)
+    #print(Static_Data)
+    Ensemble.append(Static_Data)
+    return Ensemble
 
-def FindMean(StaticDict):
+def SumOfWord(StaticDict):
+    wordsum=0
+    for key in StaticDict:
+        linecon=StaticDict[key]
+        for index in range(len(linecon)):
+            wordsum+=1
+    return wordsum
+
+def FindMeanVar(StaticDict):
     label1_float=[]
     label2_float=[]
     label3_float=[]
     result=[]
-    for key in StaticDict:
-        line_content=StaticDict[key]
-        num_line_content=len(line_content)
-        for index in range(num_line_content):
-            if line_content[index][2]==1:
-                label1_float.append(line_content[index][1])
-            elif line_content[index][2]==2:
-                label2_float.append(line_content[index][1])
-            else:
-                label3_float.append(line_content[index][1])
+    labdata_1=StaticDict["1"]
+    labdata_2=StaticDict["2"]
+    labdata_3=StaticDict["3"]
+    for n in range(len(labdata_1)):
+        label1_float.append(labdata_1[n][1])
+    for n in range(len(labdata_2)):
+        label2_float.append(labdata_2[n][1])
+    for n in range(len(labdata_1)):
+        label3_float.append(labdata_3[n][1])
     mean_1=numpy.mean(label1_float)
     var_1=numpy.var(label1_float)
     mean_2=numpy.mean(label2_float)
@@ -145,10 +166,29 @@ def FindMean(StaticDict):
     result.append(var_2)
     result.append(mean_3)
     result.append(var_3)
-    print(result)
+    #print(result)
     return result
 
-def InitThreshold(result,StaticDict):
+def GenPlot(StaticDict):
+    label1_float=[]
+    label2_float=[]
+    label3_float=[]
+    result=[]
+    labdata_1=StaticDict["1"]
+    labdata_2=StaticDict["2"]
+    labdata_3=StaticDict["3"]
+    for n in range(len(labdata_1)):
+        label1_float.append(labdata_1[n][1])
+    for n in range(len(labdata_2)):
+        label2_float.append(labdata_2[n][1])
+    for n in range(len(labdata_1)):
+        label3_float.append(labdata_3[n][1])
+    pylab.plot(range(len(label1_float)),label1_float,'ro',range(len(label2_float)),\
+               label2_float,'bo',range(len(label3_float)),label3_float,'go')
+    pylab.show()
+    return 1
+    
+def InitClassify(result,StaticDict):
     right=result[1]
     left=result[4]
     thre_right=right
@@ -163,20 +203,65 @@ def InitThreshold(result,StaticDict):
                 line_content[index].append(1)
             else:
                 line_content[index].append(2)
-    correct=0.0
-    allnum=0.0
-    for key in StaticDict:
-        line_content=StaticDict[key]
-        num_line_content=len(line_content)
-        for index in range(num_line_content):
-            allnum+=1
-            if line_content[index][2]==line_content[index][3]:
-                correct+=1
-    initrate=correct/allnum
-    print(correct)
-    print(allnum)
-    return initrate
+    return StaticDict
 
+
+def JudeThre(thre,StaticDate):
+    left=thre[0]
+    right=thre[1]
+    for key in StaticDate:
+        linecontent=StaticDate[key]
+        for index in range(len(linecontent)):
+            if linecontent[index][1]<left:
+                linecontent[index][3]=3
+            elif linecontent[index][1]>right:
+                linecontent[index][3]=1
+            else:
+                linecontent[index][3]=2
+    return StaticDate
+
+def ResultOfCla(wordsum,thre,StaticDict):
+    right=thre[1]
+    left=thre[0]
+    thre_right=right
+    thre_left=left
+    err_1=0
+    err_2=0
+    err_3=0
+    cornum=0.0
+    rate=0.0
+    labeldata_1=StaticDict["1"]
+    labeldata_2=StaticDict["2"]
+    labeldata_3=StaticDict["3"]
+    for n in range(len(labeldata_1)):
+        if labeldata_1[n][2]==labeldata_1[n][3]:
+            cornum+=1
+        else:
+            tmp=labeldata_1[n][2]-labeldata_1[n][3]
+            err_1+=tmp
+    for n in range(len(labeldata_2)):
+        if labeldata_2[n][2]==labeldata_2[n][3]:
+            cornum+=1
+        else:
+            tmp=labeldata_2[n][2]-labeldata_2[n][3]
+            err_2+=tmp
+    for n in range(len(labeldata_3)):
+        if labeldata_3[n][2]==labeldata_3[n][3]:
+            cornum+=1
+        else:
+            tmp=labeldata_3[n][2]-labeldata_3[n][3]
+            err_3+=tmp
+    rate=cornum/wordsum
+    cla_result={}
+    cla_result["1"]=err_1
+    cla_result["2"]=err_2
+    cla_result["3"]=err_3
+    cla_result["rate"]=rate
+    return cla_result
+    
+        
+              
+               
 def Recur(StaticDict,left,right):
     dir_err_1=0
     dir_err_3=0
@@ -256,5 +341,20 @@ def Recur(StaticDict,left,right):
         print("right",maxrate)
     print(StaticDict)
     return thre_result
-                
+
+def Location(OptThreshold,StaticLocation):
+    left=OptThreshold[0]
+    right=OptThreshold[1]
+    #print(StaticLocation)
+    for key in StaticLocation:
+        m_list=StaticLocation[key]
+        for index in range(len(m_list)):
+            if m_list[index][1]<left:
+                m_list[index][3]=3
+            elif m_list[index][1]>right:
+                m_list[index][3]=1
+            else:
+                m_list[index][3]=2
+    #print(StaticLocation)
+    return StaticLocation
 ###
